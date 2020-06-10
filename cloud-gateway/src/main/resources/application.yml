@@ -1,0 +1,25 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: cloud-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    sentinel:
+      transport:
+        #配置sentinel dashboard地址
+        dashboard: localhost:8080
+        #默认端口是8719，会持续增加
+        port: 8719
+
+    gateway:
+      discovery:
+        locator:
+          enabled: true #开启从注册中心动态的创建路由的功能，利用微服务名进行路由转发
+      routes:
+        - id: order_routh
+          uri: lb://cloud-provider-order
+          predicates:
+            - Path=/order/**
