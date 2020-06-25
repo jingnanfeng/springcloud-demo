@@ -19,7 +19,30 @@ spring:
         locator:
           enabled: true #开启从注册中心动态的创建路由的功能，利用微服务名进行路由转发
       routes:
+        - id: auth_routh
+          uri: lb://cloud-provider-auth
+          predicates:
+            - Path=/order/**
+          filters:
+            - StripPrefix=1
+          ribbon:
+            eager-load:
+              enabled: true
+            MaxAutoRetries: 1
+            MaxAutoRetriesNextServer: 2
+            OkToRetryOnAllOperations: false
+            ConnectTimeout: 600000
+            ReadTimeout: 600000
+
         - id: order_routh
           uri: lb://cloud-provider-order
           predicates:
             - Path=/order/**
+          ribbon:
+            eager-load:
+              enabled: true
+            MaxAutoRetries: 1
+            MaxAutoRetriesNextServer: 2
+            OkToRetryOnAllOperations: false
+            ConnectTimeout: 600000
+            ReadTimeout: 600000

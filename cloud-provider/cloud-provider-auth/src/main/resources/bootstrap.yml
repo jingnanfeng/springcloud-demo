@@ -1,0 +1,10 @@
+#spring:
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: localhost:8848
+#      config:
+#        group: DEV_GROUP
+#        namespace: 3101c61d-f279-42b8-9132-5da42307e4d9
+#        server-addr: localhost:8848
+#        file-extension: yaml
