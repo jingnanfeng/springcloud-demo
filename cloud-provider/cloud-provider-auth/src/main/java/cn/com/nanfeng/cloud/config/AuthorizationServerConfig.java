@@ -1,10 +1,12 @@
 package cn.com.nanfeng.cloud.config;
 
+import cn.com.nanfeng.cloud.security.SecurityStaticConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,11 +15,13 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.token.*;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 
 /**
  * @author liutao
@@ -33,13 +37,15 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Resource
     private AuthenticationManager authenticationManager;
     @Resource
-    private RedisConnectionFactory redisConnectionFactory;
+    private ClientDetailsService clientDetailsService;
     @Resource
     private SecurityConfigProperties properties;
     @Resource
     private UserDetailsService userDetailsService;
     @Resource
     private PasswordEncoder passwordEncoder;
+    @Resource
+    private TokenStore tokenStore;
 
     @Value("${server.accessTokenTimeOut}")
     private int accessTokenTimeOut;
@@ -47,14 +53,6 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     private int refreshTokenTimeOut;
 
 
-    /**
-     * token的存储方式
-     * @return
-     */
-    @Bean
-    public TokenStore tokenStore(){
-        return new RedisTokenStore(redisConnectionFactory);
-    }
 
     /**
      * 授权配置（authorization）以及令牌（token的访问时间和令牌服务）
@@ -62,19 +60,36 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
      */
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints){
-        endpoints.tokenStore(tokenStore())
+        endpoints
+                //密码模式需要
                 .authenticationManager(authenticationManager)
-                .userDetailsService(userDetailsService);
-        DefaultTokenServices tokenServices = new DefaultTokenServices();
-        tokenServices.setTokenStore(tokenStore());
-        tokenServices.setSupportRefreshToken(true);
-        tokenServices.setClientDetailsService(endpoints.getClientDetailsService());
-        //设置access_token的有效时长，默认是2小时
-        tokenServices.setAccessTokenValiditySeconds(accessTokenTimeOut);
-        //设置refresh_toke的有效时长，默认是1天
-        tokenServices.setRefreshTokenValiditySeconds(refreshTokenTimeOut);
-        tokenServices.setReuseRefreshToken(false);
-        endpoints.tokenServices(tokenServices);
+                //用户详细信息
+                .userDetailsService(userDetailsService)
+                //令牌管理服务
+                .tokenServices(tokenServices())
+                //允许POST提交
+                .allowedTokenEndpointRequestMethods(HttpMethod.POST);
+
+    }
+
+    @Bean
+    public AuthorizationServerTokenServices tokenServices(){
+        DefaultTokenServices services = new DefaultTokenServices();
+        //客户端信息服务
+        services.setClientDetailsService(clientDetailsService);
+        //是否刷新令牌
+        services.setSupportRefreshToken(true);
+        //令牌存储策略
+        services.setTokenStore(tokenStore);
+        //设置令牌增强
+        TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
+        tokenEnhancerChain.setTokenEnhancers(Arrays.asList(accessTokenConverter()));
+        services.setTokenEnhancer(tokenEnhancerChain);
+        //令牌的有效期2小时
+        services.setAccessTokenValiditySeconds(accessTokenTimeOut);
+        //刷新令牌默认有效期3天
+        services.setRefreshTokenValiditySeconds(refreshTokenTimeOut);
+        return services;
     }
 
     /**
@@ -85,7 +100,7 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     public void configure(AuthorizationServerSecurityConfigurer oauthServer)  {
         oauthServer
                 .allowFormAuthenticationForClients()
-                .tokenKeyAccess("isAuthenticated()")
+                .tokenKeyAccess("permitAll()")
                 .checkTokenAccess("permitAll()");
 
     }
@@ -108,6 +123,18 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
                 .scopes(properties.getScope())
                 //支持授权模式,这里配置了三种
                 .authorizedGrantTypes("refresh_token","password","authorization_code","client_credentials","implicit");
+    }
+
+    /**
+     * 自定义token的存储方式
+     * @return
+     */
+    @Bean
+    public JwtAccessTokenConverter accessTokenConverter(){
+        JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+        //对称密码，资源服务使用该密钥来验证
+        converter.setSigningKey(SecurityStaticConstant.SINGINE_KEY);
+        return converter;
     }
 
 }

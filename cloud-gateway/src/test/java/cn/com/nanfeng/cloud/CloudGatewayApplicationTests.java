@@ -1,4 +1,4 @@
-package cn.com.nanfeng.cloud.cloud;
+package cn.com.nanfeng.cloud;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

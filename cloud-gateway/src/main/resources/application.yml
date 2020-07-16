@@ -22,7 +22,7 @@ spring:
         - id: auth_routh
           uri: lb://cloud-provider-auth
           predicates:
-            - Path=/order/**
+            - Path=/auth/**
           filters:
             - StripPrefix=1
           ribbon:
@@ -46,3 +46,11 @@ spring:
             OkToRetryOnAllOperations: false
             ConnectTimeout: 600000
             ReadTimeout: 600000
+
+#权限认证
+security:
+  oauth2:
+    client:
+      client-secret: nanfeng
+      client-id: nanfengbujing
+      scope: "*"

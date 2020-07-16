@@ -5,6 +5,7 @@ import cn.com.nanfeng.cloud.common.Wrapper;
 import cn.com.nanfeng.cloud.model.po.CdUsers;
 import cn.com.nanfeng.cloud.sevice.IUserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,8 +28,15 @@ public class UserController {
 
     @GetMapping("/getUser")
     public Wrapper getUser(){
+        Object ss = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<CdUsers> usersList = userService.getUser();
         return WrapMapper.ok(usersList);
+    }
+
+    @GetMapping("/test")
+    public String test(){
+        Object ss = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return "测试成功";
     }
 
 }

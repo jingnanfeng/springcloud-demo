@@ -1,7 +1,7 @@
 server:
   port: 8084
-  accessTokenTimeOut: 1800
-  refreshTokenTimeOut: 2400
+  accessTokenTimeOut: 7200
+  refreshTokenTimeOut: 259200
 spring:
   profiles:
     active: dev

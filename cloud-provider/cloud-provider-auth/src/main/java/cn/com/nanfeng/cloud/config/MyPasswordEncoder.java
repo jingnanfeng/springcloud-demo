@@ -17,7 +17,6 @@ public class MyPasswordEncoder implements PasswordEncoder {
         log.info("加密时待加密的密码：[{}]",rawPassword.toString());
         return Md5Util.encode(rawPassword.toString());
     }
-
     @Override
     public boolean matches(CharSequence rawPassword, String encodedPassword) {
         log.debug("校验时待加密的密码：[{}]",rawPassword.toString());

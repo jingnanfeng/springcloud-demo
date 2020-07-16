@@ -1,10 +1,12 @@
-package cn.com.nanfeng.cloud.config;
+package cn.com.nanfeng.cloud.sevice;
 
 import cn.com.nanfeng.cloud.exception.BussinessException;
 import cn.com.nanfeng.cloud.exception.ExceptionEnum;
 import cn.com.nanfeng.cloud.mapper.CdMenuMapper;
 import cn.com.nanfeng.cloud.mapper.CdUsersMapper;
 import cn.com.nanfeng.cloud.model.po.CdUsers;
+import cn.com.nanfeng.cloud.model.vo.UserVO;
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,12 +36,6 @@ public class CustomUserDetailService implements UserDetailsService {
     @Resource
     private CdMenuMapper cdMenuMapper;
 
-    /**
-     * 角色前缀
-      */
-    private static final String ROLE_PREFIX = "ROLE_";
-
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         //查询用户
@@ -54,9 +50,11 @@ public class CustomUserDetailService implements UserDetailsService {
         Set<String> menuUrlSet = cdMenuMapper.selectMenuByUserId(user.getId());
         menuUrlSet.stream().forEach(menuUrl ->
                 grantedAuthoritySet.add(new SimpleGrantedAuthority(menuUrl)));
-
+        //将user转成json
+        UserVO userVO = UserVO.builder().id(user.getId()).email(user.getEmail()).username(username).build();
+        String principal = JSON.toJSONString(userVO);
         return new User(
-                user.getUsername(),
+                principal,
                 user.getPassword(),
                 true,true,true,true,
                 grantedAuthoritySet);

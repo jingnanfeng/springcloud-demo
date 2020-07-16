@@ -1,3 +1,4 @@
+/*
 package cn.com.nanfeng.cloud.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,17 +11,16 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+*/
 /**
  * @author liutao
  * @Title
  * @Description
  * @date 2020-06-25 17:17
- */
+ *//*
+
 @Component
 @Slf4j
 public class CustomAuthExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
@@ -64,3 +64,4 @@ public class CustomAuthExceptionHandler implements AuthenticationEntryPoint, Acc
         response.addHeader("Access-Control-Max-Age", "1800");
     }
 }
+*/
